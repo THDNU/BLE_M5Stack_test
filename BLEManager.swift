@@ -9,6 +9,7 @@ import CoreBluetooth
 
 class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     @Published var receivedData: String = ""
+    @Published var isConnected: Bool = false
     var centralManager: CBCentralManager!
     var peripheral: CBPeripheral?
     var characteristic: CBCharacteristic?
@@ -23,8 +24,15 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     }
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        if central.state == .poweredOn {
+        switch central.state {
+        case .poweredOn:
             startScanning()
+        case .poweredOff, .resetting, .unauthorized, .unsupported, .unknown:
+            print("Bluetooth is not available.")
+            isConnected = false
+        @unknown default:
+            print("A previously unknown central manager state occurred.")
+            isConnected = false
         }
     }
     
@@ -36,7 +44,12 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     }
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        isConnected = true
         peripheral.discoverServices([CBUUID(string: "12345678-1234-1234-1234-123456789012")])
+    }
+    
+    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        isConnected = false
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
@@ -57,7 +70,9 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         if let data = characteristic.value, let receivedString = String(data: data, encoding: .utf8) {
             DispatchQueue.main.async {
-                self.receivedData = receivedString
+                if !receivedString.isEmpty {
+                    self.receivedData = receivedString
+                }
             }
         }
     }

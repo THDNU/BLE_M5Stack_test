@@ -12,7 +12,10 @@ struct ContentView: View {
 
     var body: some View {
         VStack {
-            Text("Received Data: \(bleManager.receivedData)")
+            Text("接続状況: \(bleManager.isConnected ? "接続済み" : "未接続")")
+                .padding()
+            Text("受信データ: \(bleManager.receivedData)")
+                .font(.title2)
                 .padding()
         }
         .onAppear {
