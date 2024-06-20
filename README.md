@@ -1,2 +1,2 @@
 # BLE_M5Stack_test
-M5StackによるBLE通信のテストアプリ
+BLE通信のテストアプリ
